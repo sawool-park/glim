@@ -1,0 +1,28 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+constexpr int LAMB_SKEWER_PER     = 12000;   // 양꼬지 1인분 가격
+constexpr int FREE_DRINK_PER_LAMB = 10;      // 음료수 무료 서비스 (10인분 주문 시 1개 무료 제공)
+constexpr int DRINK_PER           = 2000;    // 음료수 1개 가격
+constexpr int MIN_LAMB_ORDER      = 1;       // equal or larger
+constexpr int MAX_LAMB_ORDER      = 1000;    // smaller than
+constexpr int MIN_DRINK_ORDER     = 0;       // equal or larger
+constexpr int MAX_DRINK_ORDER     = 1000;    // smaller than
+
+int solution(int lambOrder, int drinkOrder) {
+    if (lambOrder < MIN_LAMB_ORDER) {
+        return 0;
+    } else if (lambOrder >= MAX_LAMB_ORDER) {
+        return 0;
+    }
+    int freeDrinks = lambOrder / FREE_DRINK_PER_LAMB;
+    int paidDrinks = drinkOrder - freeDrinks;
+    paidDrinks = max(0, paidDrinks);
+    if (paidDrinks >= MAX_DRINK_ORDER) {
+        return 0;
+    }
+    int paidAmount = lambOrder * LAMB_SKEWER_PER + paidDrinks * DRINK_PER;
+    return paidAmount; 
+}

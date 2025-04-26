@@ -1,0 +1,22 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+constexpr int PARALLEL_DOTS_SIZE = 4;
+constexpr int MIN_PARALLEL_DOTS_VALUE = 0;
+constexpr int MAX_PARALLEL_DOTS_VALUE = 100;
+
+int solution(vector<vector<int>> dots) {
+    auto isParallel = [](const vector<int>& p1, const vector<int>& p2, const vector<int>& p3, const vector<int>& p4) {
+        int dx1 = p2[0] - p1[0];
+        int dy1 = p2[1] - p1[1];
+        int dx2 = p4[0] - p3[0];
+        int dy2 = p4[1] - p3[1];
+        return dy1 * dx2 == dy2 * dx1;
+    };
+
+    return isParallel(dots[0], dots[1], dots[2], dots[3]) ||
+           isParallel(dots[0], dots[2], dots[1], dots[3]) ||
+           isParallel(dots[0], dots[3], dots[1], dots[2]);
+}

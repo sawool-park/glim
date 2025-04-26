@@ -1,0 +1,72 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+constexpr int MIN_DICE_VALUE = 1;
+constexpr int MAX_DICE_VALUE = 6;
+
+int min(std::vector<int> list) {
+    int result = list[0];
+    for (int value : list) {
+        if (value < result) {
+            result = value;
+        }
+    }
+    return result;
+}
+
+int group(const int (&arr)[7]) {
+    int number = 0;
+    for (int i = 1; i < 7; i++) {
+        if (arr[i] > 0) number++;
+    }
+    return number;
+}
+    
+int solution(int a, int b, int c, int d) {
+    int count[7] = {}; 
+    count[a]++; 
+    count[b]++; 
+    count[c]++; 
+    count[d]++;
+
+    int p = 0, q = 0;
+    
+    for (int i = 1; i <= 6; ++i) {
+        if (count[i] == 4) return 1111 * i;
+    }
+
+    for (int i = 1; i <= 6; ++i) {
+        if (count[i] == 3) {
+            p = i;
+            for (int j = 1; j <= 6; ++j) {
+                if (count[j] == 1) q = j;
+            }
+            return (10 * p + q) * (10 * p + q);
+        }
+    }
+
+    int pair1 = 0, pair2 = 0;
+    for (int i = 1; i <= 6; ++i) {
+        if (count[i] == 2) {
+            if (pair1 == 0) pair1 = i;
+            else pair2 = i;
+        }
+    }
+    if (pair1 && pair2) return (pair1 + pair2) * abs(pair1 - pair2);
+
+    for (int i = 1; i <= 6; ++i) {
+        if (count[i] == 2) {
+            p = i;
+            int others[2] = {};
+            int idx = 0;
+            for (int j = 1; j <= 6; ++j) {
+                if (count[j] == 1) others[idx++] = j;
+            }
+            if (idx == 2) return others[0] * others[1];
+        }
+    }
+    std::vector<int> list = {a,b,c,d};
+    return min(list);
+}

@@ -1,0 +1,34 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+constexpr int MAX_ROW_ORDER      = 100;       // equal or smaller
+constexpr int MAX_COL_ORDER      = 100;       // equal or larger
+
+int solution(vector<vector<int>> board, int k) {
+    int row = static_cast<int>(board.size());    // size of rows
+    int col = static_cast<int>(board[0].size()); // size of columns
+    
+    if (row <= 0 || row > MAX_ROW_ORDER) {
+        return -1;
+    }
+    if (col <= 0 || col > MAX_COL_ORDER) {
+        return -1;
+    }
+    if (k < 0 || k >= row + col) {
+        return -1;
+    }
+
+    // 제약조건:
+    // 직사각형 2차원 배열이고 행과 열의 길이가 다를 수 있어, 대각선 길이에 따라 순회하되 배열 크기를 넘지 않도록 해야 함.
+    int sum = 0;
+    for (int d = 0; d <= k; d++) {
+        for (int j = d, i = 0; j >= 0; j--, i++) {
+            if (i < row && j < col) {
+                sum += board[i][j];
+            }
+        }
+    }
+    return sum;
+}
