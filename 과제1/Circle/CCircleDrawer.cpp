@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 CCircleDrawer::CCircleDrawer() : m_index(0), m_crcOuter(nullptr) {
     m_crcInners.clear();
     m_crcFrames.clear();
@@ -60,27 +61,25 @@ void CCircleDrawer::FillCircleImage(CImage* image, CircleObject* object, COLORRE
     int width = image->GetWidth();
     int height = image->GetHeight();
     int pitch = image->GetPitch();
-    BYTE* pBits = (BYTE*)image->GetBits();
+    BYTE* frame = (BYTE*)image->GetBits();
 
     int inner = object->m_radius * object->m_radius;
+
+    BYTE src[4];
+    src[0] = GetBValue(color);
+    src[1] = GetGValue(color);
+    src[2] = GetRValue(color);
+    src[3] = 255;
+
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int dx = x - object->m_radius;
             int dy = y - object->m_radius;
-            int distSq = dx * dx + dy * dy;
-            BYTE* pLine = pBits + y * pitch;
-            BYTE* pixel = pLine + x * 4;
-            if (distSq <= inner) {
-                pixel[0] = GetBValue(color);
-                pixel[1] = GetGValue(color);
-                pixel[2] = GetRValue(color);
-                pixel[3] = 255;
-            }
-            else {
-                pixel[0] = 255;
-                pixel[1] = 255;
-                pixel[2] = 255;
-                pixel[3] = 0;
+            int distance = dx * dx + dy * dy;
+            BYTE* line = frame + y * pitch;
+            BYTE* dst = line + x * 4;
+            if (distance <= inner) {
+                AlphaBlending(src, dst, dst);
             }
         }
     }
@@ -93,25 +92,26 @@ void CCircleDrawer::DrawCircleWithThickness(CImage* image, CircleObject* object,
     if (width == 0) return;
     int height = image->GetHeight();
     int pitch = image->GetPitch();
-    BYTE* pBits = (BYTE*)image->GetBits();
+    BYTE* frame = (BYTE*)image->GetBits();
 
     int inner = (object->m_radius - object->m_thickness / 2) * (object->m_radius - object->m_thickness / 2);
     int outer = (object->m_radius + object->m_thickness  / 2) * (object->m_radius + object->m_thickness / 2);
-    // 선 두께만큼 반지름 보정
-    int radius = object->m_radius;
      
+    BYTE src[4];
+    src[0] = GetBValue(color);
+    src[1] = GetGValue(color);
+    src[2] = GetRValue(color);
+    src[3] = ALPHA_OUTER;
+
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int dx = x - object->m_center.x;
             int dy = y - object->m_center.y;
-            int distSq = dx * dx + dy * dy;
-            BYTE* pLine = pBits + y * pitch;
-            BYTE* pixel = pLine + x * 4;
-            if (distSq >= inner && distSq <= outer) {
-                pixel[0] = GetBValue(color);
-                pixel[1] = GetGValue(color);
-                pixel[2] = GetRValue(color);
-                pixel[3] = 255;  // 불투명
+            int distance = dx * dx + dy * dy;
+            BYTE* line = frame + y * pitch;
+            BYTE* dst = line + x * 4;
+            if (distance >= inner && distance <= outer) {
+                AlphaBlending(src, dst, dst);
             }
         }
     }
@@ -218,30 +218,25 @@ void CCircleDrawer::ComposeFrameBuffer(CImage* back)
     int width = back->GetWidth();
     int height = back->GetHeight();
     int pitch = back->GetPitch();
-    BYTE* pDstBits = (BYTE*)back->GetBits();
+    BYTE* frame = (BYTE*)back->GetBits();
 
     for (const auto& circle : m_crcInners) {
-        CImage* src = circle->m_image;
-        int w = src->GetWidth();
-        int h = src->GetHeight();
+        CImage* object = circle->m_image;
+        BYTE* region = (BYTE*)object->GetBits();
+        int w = object->GetWidth();
+        int h = object->GetHeight();
         int dx = circle->m_center.x - w / 2;
         int dy = circle->m_center.y - h / 2;
-        BYTE* pSrcBits = (BYTE*)src->GetBits();
-        int srcPitch = src->GetPitch();
+        int regionPitch = object->GetPitch();
         for (int y = 0; y < h; ++y) {
             if (dy + y < 0 || dy + y >= height) continue;
-            BYTE* pSrcLine = pSrcBits + y * srcPitch;
-            BYTE* pDstLine = pDstBits + (dy + y) * pitch;
+            BYTE* srcLine = region + y * regionPitch;
+            BYTE* dstLine = frame + (dy + y) * pitch;
             for (int x = 0; x < w; ++x) {
                 if (dx + x < 0 || dx + x >= width) continue;
-                BYTE* pSrcPixel = pSrcLine + x * 4;
-                BYTE* pDstPixel = pDstLine + (dx + x) * 4;
-                // 알파 블렌딩
-                float alpha = pSrcPixel[3] / 255.0f;
-                for (int c = 0; c < 3; ++c) {
-                    pDstPixel[c] = static_cast<BYTE>(pSrcPixel[c] * alpha + pDstPixel[c] * (1.0f - alpha));
-                }
-                pDstPixel[3] = BYTE(alpha * 255);
+                BYTE* src = srcLine + x * 4;
+                BYTE* dst = dstLine + (dx + x) * 4;
+                AlphaBlending(src, dst, dst);
             }
         }
      }

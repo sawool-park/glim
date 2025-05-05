@@ -31,7 +31,7 @@
 const CString	DEFAULT_CIRCLE_RADIUS = _T("50");
 const CString	DEFAULT_CIRCLE_BORDER_THICKNESS = _T("4");
 const COLORREF	DEFAULT_DRAW_AREA_BACKGROUND_COLOR = RGB(255, 255, 255);
-const float		DEFAULT_DRAW_FRAME_RATE = (1000.0f / 200);
+const float		DEFAULT_DRAW_FRAME_RATE = (1000.0f / 500);
 
 class CCircleDlg : public CDialogEx
 {

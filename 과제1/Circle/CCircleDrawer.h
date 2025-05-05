@@ -12,9 +12,12 @@
 const UINT NUMBER_OF_DRAGGABLE_CIRCLES = 3;
 const int  NUMBER_OF_FRAME_BUFFER = 2;
 const BYTE ALPHA_OUTER = 100;
+const BYTE WHITE = 255;
 const bool IsCircumOuterOnTop = true;
 
 const COLORREF BACKGROUND_COLOR = RGB(255, 255, 255);
+const float alpha_norm = 1 / 255.0f;
+const float alpha_denorm = 255.0f;
 
 class CircleObject {
 public:
@@ -285,4 +288,27 @@ public:
 	}
 
 	void ClearFrameImage(CImage* image, COLORREF color);
+	
+	/* alpha blending
+		- a : 0 .. 255 일 경우 한 해, af = af * alpha_norm, ab = ab * alpha_norm, ... 처리 후, 마지막에 ab = ao * alpha_denorm
+		ao = af + ab * (1 - af);
+		co = (cf * af + cb * ab * (1 - af)) / ao;
+		cb = co;
+		ab = ao;
+	*/
+	inline void AlphaBlending(BYTE* src, BYTE* bac, BYTE* dst) {
+		float af = src[3] * alpha_norm;
+		float ab = bac[3] * alpha_norm;
+		float ao = af + ab * (1 - af);
+		if (ao != 0) {
+			int co = 0;
+			for (int c = 0; c < 3; c++) {
+				co = (int)((src[c] * af + bac[c] * ab * (1 - af)) / ao);
+				if (co < 0) co = 0;
+				if (co > 255) co = 255;
+				dst[c] = (BYTE)co;
+			}
+			dst[3] = (BYTE)(ao * alpha_denorm);
+		}
+	}
 };
